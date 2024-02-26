@@ -93,6 +93,58 @@ app.get("http://localhost:5000/get-user", (req, res) => {
 });
 
 
+require("./models/coures.models.js");
+const Course = mongoose.model('course');
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "../frontend/src/images");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now();
+    cb(null, uniqueSuffix + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+app.post("/addcourse", upload.single("image"), async (req, res) => {
+  const { name, category, description, coordinatorEmail } = req.body;
+  const imageName = req.file.filename;
+
+  try {
+      await Course.create({
+          name: name,
+          category: category,
+          description: description,
+          image: imageName,
+          coordinatorEmail: coordinatorEmail  // Assuming coordinatorEmail is a field in your Course model
+      });
+
+      res.json({ status: "ok" });
+  } catch (error) {
+      res.json({ status: error.message || "Error adding course" });
+  }
+});
+
+
+app.get("/getcourse", async (req, res) => {
+  const { email } = req.query;
+  console.log("Received Email:", email);
+
+  try {
+      const courses = await Course.find({ coordinatorEmail: email });
+      res.send({ status: "ok", data: courses });
+  } catch (error) {
+      res.json({ status: error });
+      console.log(error);
+  }
+});
+
+
+
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
 });
+
+
