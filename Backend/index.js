@@ -109,7 +109,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 app.post("/addcourse", upload.single("image"), async (req, res) => {
-  const { name, category, description, coordinatorEmail } = req.body;
+  const { name, category, description, coordinatorEmail, coordinatorDept,coordinatorClg } = req.body;
   const imageName = req.file.filename;
 
   try {
@@ -118,7 +118,9 @@ app.post("/addcourse", upload.single("image"), async (req, res) => {
           category: category,
           description: description,
           image: imageName,
-          coordinatorEmail: coordinatorEmail  // Assuming coordinatorEmail is a field in your Course model
+          coordinatorEmail: coordinatorEmail,
+          coordinatorDept: coordinatorDept, // Store coordinator's department
+          coordinatorClg: coordinatorClg, // Store coordinator's department
       });
 
       res.json({ status: "ok" });
@@ -126,6 +128,7 @@ app.post("/addcourse", upload.single("image"), async (req, res) => {
       res.json({ status: error.message || "Error adding course" });
   }
 });
+
 
 
 app.get("/getcourse", async (req, res) => {
@@ -140,6 +143,23 @@ app.get("/getcourse", async (req, res) => {
       console.log(error);
   }
 });
+app.get("/getusercourse", async (req, res) => {
+  const {coordinatorDept, coordinatorClg } = req.query;
+  console.log("Received Coordinator Department:", coordinatorDept);
+  console.log("Received Coordinator College:", coordinatorClg);
+
+  try {
+      const courses = await Course.find({ 
+          coordinatorDept: coordinatorDept,
+          coordinatorClg: coordinatorClg
+      });
+      res.send({ status: "ok", data: courses });
+  } catch (error) {
+      res.json({ status: error.message });
+      console.log(error);
+  }
+});
+
 
 
 

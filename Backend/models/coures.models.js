@@ -6,7 +6,9 @@ const CourseSchema = new mongoose.Schema(
         category: { type: String, required: true },
         description: { type: String, required: true },
         image: { type: String, required: true },
-        coordinatorEmail: { type: String }  // Add this field
+        coordinatorEmail: { type: String },
+        coordinatorDept: { type: String }  ,
+        coordinatorClg: { type: String }  
     },
     {
         collection: "course",
