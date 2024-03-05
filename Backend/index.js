@@ -2,8 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const Register = require("./models/register.models");
-const crypto = require('crypto');
-const session = require('express-session');
+const crypto = require("crypto");
+const session = require("express-session");
 
 const app = express();
 app.use(express.json());
@@ -23,12 +23,13 @@ app.use(cors());
 //     console.log(error);
 //   });
 
-const URL = "mongodb+srv://patelpriysnshu2410:Patel2410@cluster0.jj6ielk.mongodb.net";
+const URL =
+  "mongodb+srv://patelpriysnshu2410:Patel2410@cluster0.jj6ielk.mongodb.net";
 mongoose.connect(URL);
 const conn = mongoose.connection;
 conn.once("open", () => {
   console.log("Connected to MongoDB");
-}); 
+});
 conn.on("error", (error) => {
   console.log(error);
 });
@@ -40,7 +41,7 @@ app.post("/register", async (req, res) => {
 
     if (existingUser) {
       // If the email is already registered, send an error response
-      return res.status(400).json({ error: 'Email already registered' });
+      return res.status(400).json({ error: "Email already registered" });
     }
 
     // If the email is not registered, create a new registration
@@ -48,10 +49,9 @@ app.post("/register", async (req, res) => {
     res.json(newUser);
   } catch (error) {
     // Handle other errors that might occur during registration
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -76,25 +76,19 @@ app.post("/login", async (req, res) => {
   }
 });
 
-
-
-
-
 app.get("http://localhost:5000/get-user", (req, res) => {
-  
   // const user = req.session.user;
   // console.log("Request to /api/get-user received");
   console.log(user);
   if (user) {
     res.json(user).status(200);
   } else {
-    res.status(401).json({ message: 'Unauthorized' });
+    res.status(401).json({ message: "Unauthorized" });
   }
 });
 
-
 require("./models/coures.models.js");
-const Course = mongoose.model('course');
+const Course = mongoose.model("course");
 const multer = require("multer");
 
 const storage = multer.diskStorage({
@@ -109,62 +103,81 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 app.post("/addcourse", upload.single("image"), async (req, res) => {
-  const { name, category, description, coordinatorEmail, coordinatorDept,coordinatorClg } = req.body;
+  const {
+    name,
+    category,
+    description,
+    coordinatorEmail,
+    coordinatorDept,
+    coordinatorClg,
+  } = req.body;
   const imageName = req.file.filename;
 
   try {
-      await Course.create({
-          name: name,
-          category: category,
-          description: description,
-          image: imageName,
-          coordinatorEmail: coordinatorEmail,
-          coordinatorDept: coordinatorDept, // Store coordinator's department
-          coordinatorClg: coordinatorClg, // Store coordinator's department
-      });
+    await Course.create({
+      name: name,
+      category: category,
+      description: description,
+      image: imageName,
+      coordinatorEmail: coordinatorEmail,
+      coordinatorDept: coordinatorDept, // Store coordinator's department
+      coordinatorClg: coordinatorClg, // Store coordinator's department
+    });
 
-      res.json({ status: "ok" });
+    res.json({ status: "ok" });
   } catch (error) {
-      res.json({ status: error.message || "Error adding course" });
+    res.json({ status: error.message || "Error adding course" });
   }
 });
 
+const VideoItem = require("./models/videoitem.model");
+app.post("/addvideo", upload.single("video"), async (req, res) => {
+  const { name, description, courseID, youtubeLink } = req.body;
+  // const videoName = req.file.filename;
 
+  try {
+    await VideoItem.create({
+      title: name,
+      description: description,
+      youtubeLink: youtubeLink,
+      courseID: courseID,
+    });
+
+    res.json({ status: "ok" });
+  } catch (error) {
+    res.json({ status: error.message || "Error adding video" });
+  }
+});
 
 app.get("/getcourse", async (req, res) => {
   const { email } = req.query;
   console.log("Received Email:", email);
 
   try {
-      const courses = await Course.find({ coordinatorEmail: email });
-      res.send({ status: "ok", data: courses });
+    const courses = await Course.find({ coordinatorEmail: email });
+    res.send({ status: "ok", data: courses });
   } catch (error) {
-      res.json({ status: error });
-      console.log(error);
+    res.json({ status: error });
+    console.log(error);
   }
 });
 app.get("/getusercourse", async (req, res) => {
-  const {coordinatorDept, coordinatorClg } = req.query;
+  const { coordinatorDept, coordinatorClg } = req.query;
   console.log("Received Coordinator Department:", coordinatorDept);
   console.log("Received Coordinator College:", coordinatorClg);
 
   try {
-      const courses = await Course.find({ 
-          coordinatorDept: coordinatorDept,
-          coordinatorClg: coordinatorClg
-      });
-      res.send({ status: "ok", data: courses });
+    const courses = await Course.find({
+      coordinatorDept: coordinatorDept,
+      coordinatorClg: coordinatorClg,
+    });
+    res.send({ status: "ok", data: courses });
   } catch (error) {
-      res.json({ status: error.message });
-      console.log(error);
+    res.json({ status: error.message });
+    console.log(error);
   }
 });
-
-
-
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
 });
-
-
