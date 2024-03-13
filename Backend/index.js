@@ -161,6 +161,21 @@ app.get("/getcourse", async (req, res) => {
     console.log(error);
   }
 });
+
+app.get("/getvideo", async (req, res) => {
+  const { courseID } = req.query;
+  console.log("Received Course ID:", courseID);
+
+  try {
+    const videos = await VideoItem.find({ courseID: courseID });
+    console.log(videos);
+    res.send({ status: "ok", data: videos });
+  } catch (error) {
+    res.json({ status: error.message });
+    console.log(error);
+  }
+});
+
 app.get("/getusercourse", async (req, res) => {
   const { coordinatorDept, coordinatorClg } = req.query;
   console.log("Received Coordinator Department:", coordinatorDept);
