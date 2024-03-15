@@ -87,27 +87,30 @@ app.get("http://localhost:5000/get-user", (req, res) => {
   }
 });
 
-app.put("/  update-profile/:email",async(req, resp) => {
-  const email = req.params.email
+app.put("/update-profile/:email", async (req, resp) => {
+  const email = req.params.email;
   const { first_name, last_name, number, gender, collage, department } =
     req.body;
 
-    const user = await Register.findOneAndUpdate({
-      email:email
-    },{
-      firstName:first_name,
-      lastName:last_name,
-      phone:number,
-      gender:gender,
-      college:collage,
-      dep:department
-    })
+  const user = await Register.findOneAndUpdate(
+    {
+      email: email,
+    },
+    {
+      firstName: first_name,
+      lastName: last_name,
+      phone: number,
+      gender: gender,
+      college: collage,
+      dep: department,
+    }
+  );
 
-    const response = await Register.findOne({
-      email:email
-    })
+  const response = await Register.findOne({
+    email: email,
+  });
 
-    resp.json(response)
+  resp.json(response);
 });
 
 require("./models/coures.models.js");
