@@ -4,6 +4,7 @@ const cors = require("cors");
 const Register = require("./models/register.models");
 const crypto = require("crypto");
 const session = require("express-session");
+const Enrollment = require("./models/enrollment.models.js");
 
 const app = express();
 app.use(express.json());
@@ -76,6 +77,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
+
 app.get("http://localhost:5000/get-user", (req, res) => {
   // const user = req.session.user;
   // console.log("Request to /api/get-user received");
@@ -86,6 +88,7 @@ app.get("http://localhost:5000/get-user", (req, res) => {
     res.status(401).json({ message: "Unauthorized" });
   }
 });
+
 
 require("./models/coures.models.js");
 const Course = mongoose.model("course");
@@ -177,19 +180,48 @@ app.get("/getvideo", async (req, res) => {
 });
 
 app.get("/getusercourse", async (req, res) => {
-  const { coordinatorDept, coordinatorClg } = req.query;
-  console.log("Received Coordinator Department:", coordinatorDept);
-  console.log("Received Coordinator College:", coordinatorClg);
+  const { userId, coordinatorDept, coordinatorClg } = req.query; // Include userId in query parameters
 
   try {
     const courses = await Course.find({
       coordinatorDept: coordinatorDept,
       coordinatorClg: coordinatorClg,
     });
-    res.send({ status: "ok", data: courses });
+
+    // Fetch enrolled courses for the user
+    const enrolledCourses = await Enrollment.find({ userId: userId });
+
+    // Mark courses as enrolled if the user is already enrolled
+    const coursesWithEnrollmentStatus = courses.map(course => {
+      const isEnrolled = enrolledCourses.some(enrollment => enrollment.courseId.toString() === course._id.toString());
+      return { ...course.toObject(), isEnrolled };
+    });
+
+    res.send({ status: "ok", data: coursesWithEnrollmentStatus });
   } catch (error) {
-    res.json({ status: error.message });
+    res.status(500).json({ status: error.message });
     console.log(error);
+  }
+});
+
+
+app.post("/enroll", async (req, res) => {
+  const { userId, courseId, courseName } = req.body;
+  console.log("Received User ID:", userId, "Course ID:", courseId, "Course Name:", courseName, typeof(courseName));
+
+  try {
+    // Check if the enrollment already exists
+    const existingEnrollment = await Enrollment.findOne({ userId, courseId });
+
+    if (existingEnrollment) {
+      return res.status(400).json({ error: "User already enrolled in this course" });
+    }
+
+    // If not enrolled, create a new enrollment
+    await Enrollment.create({ userId, courseId, courseName });
+    res.json({ status: "ok" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
