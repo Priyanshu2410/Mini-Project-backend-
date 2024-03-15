@@ -14,6 +14,19 @@ const enrollmentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    courseimage: {
+      type: String,
+      required: true,
+    },
+    coursecategory: {
+      type: String,
+      required: true,
+    },
+    coursedescription: {
+      type: String,
+      required: true,
+    },
+    
     // Add other fields as needed
   },
   { timestamps: true }

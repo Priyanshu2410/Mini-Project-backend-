@@ -89,7 +89,6 @@ app.get("http://localhost:5000/get-user", (req, res) => {
   }
 });
 
-
 require("./models/coures.models.js");
 const Course = mongoose.model("course");
 const multer = require("multer");
@@ -152,6 +151,29 @@ app.post("/addvideo", upload.single("video"), async (req, res) => {
   }
 });
 
+
+app.put("/update-profile/:email",async(req, resp) => {
+  const email = req.params.email
+  const { first_name, last_name, number, gender, collage, department } =
+    req.body;
+
+    const user = await Register.findOneAndUpdate({
+      email:email
+    },{
+      firstName:first_name,
+      lastName:last_name,
+      phone:number,
+      gender:gender,
+      college:collage,
+      dep:department
+    })
+
+    const response = await Register.findOne({
+      email:email
+    })
+
+    resp.json(response)
+});
 app.get("/getcourse", async (req, res) => {
   const { email } = req.query;
   console.log("Received Email:", email);
@@ -206,7 +228,7 @@ app.get("/getusercourse", async (req, res) => {
 
 
 app.post("/enroll", async (req, res) => {
-  const { userId, courseId, courseName } = req.body;
+  const { userId, courseId, courseName, courseimage,coursecategory,coursedescription } = req.body;
   console.log("Received User ID:", userId, "Course ID:", courseId, "Course Name:", courseName, typeof(courseName));
 
   try {
@@ -218,12 +240,28 @@ app.post("/enroll", async (req, res) => {
     }
 
     // If not enrolled, create a new enrollment
-    await Enrollment.create({ userId, courseId, courseName });
+    await Enrollment.create({ userId, courseId, courseName,coursedescription,coursecategory,courseimage });
     res.json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// Define a new route to fetch enrolled courses for a specific user
+app.get("/getuserenrolledcourses/:userId", async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    // Find all enrolled courses for the specified user
+    const enrolledCourses = await Enrollment.find({ userId });
+
+    res.json({ status: "ok", data: enrolledCourses });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
