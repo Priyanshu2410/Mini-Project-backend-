@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const session = require("express-session");
 const Enrollment = require("./models/enrollment.models.js");
 const Progress = require("./models/progress.models.js");
+const Quiz = require("./models/quiz.models.js");
 
 const app = express();
 app.use(express.json());
@@ -341,7 +342,30 @@ app.get("/getuserenrolledcourses/:userId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+//quiz get
+app.get("/api/quizzes", async (req, res) => {
+  try {
+    const quizzes = await Quiz.find();
+    res.json(quizzes);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
+app.post("/api/quiz", async (req, res) => {
+  const quiz = new Quiz({
+    question: req.body.question,
+    options: req.body.options,
+    correctOption: req.body.correctOption,
+  });
+
+  try {
+    const newQuiz = await quiz.save();
+    res.status(201).json(newQuiz);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
 });
