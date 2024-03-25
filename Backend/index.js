@@ -5,17 +5,10 @@ const Register = require("./models/register.models");
 const crypto = require("crypto");
 const session = require("express-session");
 const Enrollment = require("./models/enrollment.models.js");
-const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
-const MaterialInf = require("./models/material.models.js");
 
 const app = express();
 app.use(express.json());
-app.use(cookieParser())
-app.use(cors({
-  origin: ["http://localhost:3000"],
-  credentials: true
-})) 
+app.use(cors());
 // const sessionSecret = crypto.randomBytes(32).toString('hex');
 // app.use(session({
 //   secret: sessionSecret,
@@ -138,7 +131,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-
 app.get("http://localhost:5000/get-user", (req, res) => {
   // const user = req.session.user;
   // console.log("Request to /api/get-user received");
@@ -150,27 +142,30 @@ app.get("http://localhost:5000/get-user", (req, res) => {
   }
 });
 
-app.put("/  update-profile/:email",async(req, resp) => {
-  const email = req.params.email
+app.put("/update-profile/:email", async (req, resp) => {
+  const email = req.params.email;
   const { first_name, last_name, number, gender, collage, department } =
     req.body;
 
-    const user = await Register.findOneAndUpdate({
-      email:email
-    },{
-      firstName:first_name,
-      lastName:last_name,
-      phone:number,
-      gender:gender,
-      college:collage,
-      dep:department
-    })
+  const user = await Register.findOneAndUpdate(
+    {
+      email: email,
+    },
+    {
+      firstName: first_name,
+      lastName: last_name,
+      phone: number,
+      gender: gender,
+      college: collage,
+      dep: department,
+    }
+  );
 
-    const response = await Register.findOne({
-      email:email
-    })
+  const response = await Register.findOne({
+    email: email,
+  });
 
-    resp.json(response)
+  resp.json(response);
 });
 
 require("./models/coures.models.js");
@@ -235,28 +230,30 @@ app.post("/addvideo", upload.single("video"), async (req, res) => {
   }
 });
 
-
-app.put("/update-profile/:email",async(req, resp) => {
-  const email = req.params.email
+app.put("/update-profile/:email", async (req, resp) => {
+  const email = req.params.email;
   const { first_name, last_name, number, gender, collage, department } =
     req.body;
 
-    const user = await Register.findOneAndUpdate({
-      email:email
-    },{
-      firstName:first_name,
-      lastName:last_name,
-      phone:number,
-      gender:gender,
-      college:collage,
-      dep:department
-    })
+  const user = await Register.findOneAndUpdate(
+    {
+      email: email,
+    },
+    {
+      firstName: first_name,
+      lastName: last_name,
+      phone: number,
+      gender: gender,
+      college: collage,
+      dep: department,
+    }
+  );
 
-    const response = await Register.findOne({
-      email:email
-    })
+  const response = await Register.findOne({
+    email: email,
+  });
 
-    resp.json(response)
+  resp.json(response);
 });
 app.get("/getcourse", async (req, res) => {
   const { email } = req.query;
@@ -268,6 +265,18 @@ app.get("/getcourse", async (req, res) => {
   } catch (error) {
     res.json({ status: error });
     console.log(error);
+  }
+});
+
+app.get("/getprogress", async (req, res) => {
+  try {
+    const id = req.query.id;
+    const result = await Progress.findOne({
+      userId: id,
+    });
+    res.send(result);
+  } catch (err) {
+    res.send(err);
   }
 });
 
@@ -298,8 +307,10 @@ app.get("/getusercourse", async (req, res) => {
     const enrolledCourses = await Enrollment.find({ userId: userId });
 
     // Mark courses as enrolled if the user is already enrolled
-    const coursesWithEnrollmentStatus = courses.map(course => {
-      const isEnrolled = enrolledCourses.some(enrollment => enrollment.courseId.toString() === course._id.toString());
+    const coursesWithEnrollmentStatus = courses.map((course) => {
+      const isEnrolled = enrolledCourses.some(
+        (enrollment) => enrollment.courseId.toString() === course._id.toString()
+      );
       return { ...course.toObject(), isEnrolled };
     });
 
@@ -310,24 +321,77 @@ app.get("/getusercourse", async (req, res) => {
   }
 });
 
-
 app.post("/enroll", async (req, res) => {
-  const { userId, courseId, courseName, courseimage,coursecategory,coursedescription } = req.body;
-  console.log("Received User ID:", userId, "Course ID:", courseId, "Course Name:", courseName, typeof(courseName));
+  const {
+    userId,
+    courseId,
+    courseName,
+    courseimage,
+    coursecategory,
+    coursedescription,
+    watchvideo,
+  } = req.body;
+  console.log(
+    "Received User ID:",
+    userId,
+    "Course ID:",
+    courseId,
+    "Course Name:",
+    courseName,
+    typeof courseName
+  );
 
   try {
     // Check if the enrollment already exists
     const existingEnrollment = await Enrollment.findOne({ userId, courseId });
 
     if (existingEnrollment) {
-      return res.status(400).json({ error: "User already enrolled in this course" });
+      return res
+        .status(400)
+        .json({ error: "User already enrolled in this course" });
     }
 
     // If not enrolled, create a new enrollment
-    await Enrollment.create({ userId, courseId, courseName,coursedescription,coursecategory,courseimage });
+    await Enrollment.create({
+      userId,
+      courseId,
+      courseName,
+      coursedescription,
+      coursecategory,
+      courseimage,
+    });
     res.json({ status: "ok" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/video/progress", async (req, res) => {
+  const { userid, videoid, progress } = req.body;
+  console.log(userid);
+  try {
+    var existingProgress = await Progress.collection.findOne({
+      userId: userid,
+    });
+    var newProgress = { ...existingProgress?.progress, [videoid]: progress };
+    const resp = await Progress.updateOne(
+      {
+        userId: userid,
+      },
+      {
+        $set: {
+          progress: {
+            ...newProgress,
+          },
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
+    res.json(resp);
+  } catch (error) {
+    console.log(error);
   }
 });
 
@@ -342,20 +406,6 @@ app.get("/getuserenrolledcourses/:userId",varifyUser, async (req, res) => {
     res.json({ status: "ok", data: enrolledCourses });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-
-app.post("/upload-files", upload.single("file"), async (req, res) => {
-  console.log(req.file);
-  const title = req.body.title;
-  const fileName = req.file.filename;
-  console.log(title, fileName);
-  try {
-    await MaterialInf.create({ title: title, pdf: fileName });
-    res.send({ status: "ok" });
-  } catch (error) {
-    res.json({ status: error });
   }
 });
 
