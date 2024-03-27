@@ -10,7 +10,9 @@ const cookieParser = require("cookie-parser");
 const MaterialInf = require("./models/material.models.js");
 const Progress = require("./models/progress.models.js");
 
+
 const app = express();
+app.use("../Frontend/src/images", express.static("files"));
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -198,7 +200,7 @@ const multer = require("multer");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "../../Mini-Project/src/images");
+    cb(null, "../Frontend/src/images");
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now();
@@ -433,16 +435,26 @@ app.get("/getprogress", async (req, res) => {
 });
 
 app.post("/upload-files", upload.single("file"), async (req, res) => {
-  console.log(req.file);
-  const title = req.body.title;
-  const fileName = req.file.filename;
-  console.log(title, fileName);
   try {
-    await MaterialInf.create({ title: title, pdf: fileName });
-    res.send({ status: "ok" });
+    const { title } = req.body;
+    const { filename: pdf } = req.file;
+
+    // Create a new document in the database
+    const material = await MaterialInf.create({ title, pdf });
+
+    res.status(201).json({ status: "ok", material });
   } catch (error) {
-    res.json({ status: error });
+    console.error(error);
+    res.status(500).json({ status: "error", message: "Failed to upload file" });
   }
+});
+
+app.get("/get-files", async (req, res) => {
+  try {
+    MaterialInf.find({}).then((data) => {
+      res.send({ status: "ok", data: data });
+    });
+  } catch (error) {}
 });
 
 app.listen(5000, () => {

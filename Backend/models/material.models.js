@@ -1,3 +1,5 @@
+// material.model.js
+
 const mongoose = require("mongoose");
 
 const MaterialSchema = new mongoose.Schema(
@@ -8,4 +10,6 @@ const MaterialSchema = new mongoose.Schema(
   { collection: "materialdet" }
 );
 
-mongoose.model("MaterialInf", MaterialSchema);
+const MaterialInf = mongoose.model("MaterialInf", MaterialSchema);
+
+module.exports = MaterialInf;
