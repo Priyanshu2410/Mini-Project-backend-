@@ -436,11 +436,11 @@ app.get("/getprogress", async (req, res) => {
 
 app.post("/upload-files", upload.single("file"), async (req, res) => {
   try {
-    const { title } = req.body;
+    const { title, courseId } = req.body; // Extract courseId from request body
     const { filename: pdf } = req.file;
 
-    // Create a new document in the database
-    const material = await MaterialInf.create({ title, pdf });
+    // Create a new document in the database with courseId
+    const material = await MaterialInf.create({ title, pdf, courseId });
 
     res.status(201).json({ status: "ok", material });
   } catch (error) {
