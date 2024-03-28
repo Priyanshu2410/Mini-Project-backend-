@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const MaterialInf = require("./models/material.models.js");
 const Progress = require("./models/progress.models.js");
+const path = require("path");
 
 
 const app = express();
@@ -450,12 +451,25 @@ app.post("/upload-files", upload.single("file"), async (req, res) => {
 });
 
 app.get("/get-files", async (req, res) => {
+  const { courseID } = req.query;
+  console.log("Received Course ID:", courseID);
+
   try {
-    MaterialInf.find({}).then((data) => {
-      res.send({ status: "ok", data: data });
-    });
-  } catch (error) {}
+    let materials;
+    if (courseID) {
+      materials = await MaterialInf.find({ courseId: courseID });
+    } else {
+      materials = await MaterialInf.find({});
+    }
+    res.send({ status: "ok", data: materials });
+  } catch (error) {
+    res.json({ status: error.message });
+    console.log(error);
+  }
 });
+
+app.use("/pdfs", express.static(path.join(__dirname, "../Frontend/src/images")));
+
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
